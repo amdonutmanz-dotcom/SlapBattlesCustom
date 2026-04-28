@@ -1,0 +1,115 @@
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local backpack = player:WaitForChild("Backpack")
+
+-- // 1. NOTIFICATION SYSTEM
+local function sendNotification()
+    StarterGui:SetCore("SendNotification", {
+        Title = "Equip Brick or else it won't work!";
+        Text = "Enjoy :)";
+        Duration = 5;
+    })
+end
+
+-- // 2. REMOTE LOGIC
+local function getRemote()
+    local r = ReplicatedStorage:FindFirstChild("lbrick")
+    if r then return r end
+    for _, child in ipairs(ReplicatedStorage:GetChildren()) do
+        if child.Name:lower() == "lbrick" then return child end
+    end
+    return nil
+end
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if input.KeyCode == Enum.KeyCode.E then
+        local remote = getRemote()
+        if remote then remote:FireServer() end
+    end
+end)
+
+-- // 3. LEADERSTATS SETUP
+local stats = player:FindFirstChild("leaderstats") or Instance.new("Folder")
+stats.Name = "leaderstats"
+stats.Parent = player
+
+local gloveStat = stats:FindFirstChild("Glove") or Instance.new("StringValue")
+gloveStat.Name = "Glove"
+gloveStat.Value = "Minecraft"
+gloveStat.Parent = stats
+
+-- // 4. THE "PURGE" LOOP (UI, Cooldowns, and BRICKCOUNT)
+RunService.RenderStepped:Connect(function()
+    -- Ensure leaderboard stays "Minecraft"
+    if gloveStat.Value ~= "Minecraft" then
+        gloveStat.Value = "Minecraft"
+    end
+
+    -- Fix Keybind Text
+    for _, obj in ipairs(playerGui:GetDescendants()) do
+        if obj.Name == "KeybindText" and obj:IsA("TextLabel") then
+            obj.Text = "Minecraft"
+        end
+    end
+
+    -- NEW: Delete BRICKCOUNT ImageLabels
+    local brickCountFolder = playerGui:FindFirstChild("BRICKCOUNT")
+    if brickCountFolder then
+        for _, child in ipairs(brickCountFolder:GetChildren()) do
+            if child:IsA("ImageLabel") then
+                child:Destroy()
+            end
+        end
+    end
+
+    -- Delete Ability Cooldown
+    local altCheck = playerGui:FindFirstChild("AbilityCooldown", true)
+    if altCheck then altCheck:Destroy() end
+end)
+
+-- // 5. TOOL STYLING
+local function applyStyle(tool)
+    if not tool:IsA("Tool") then return end
+    tool.Name = "Minecraft"
+    
+    local handle = tool:FindFirstChild("Handle")
+    if handle and handle:IsA("BasePart") then
+        handle.Color = Color3.fromRGB(139, 69, 19)
+        handle.Material = Enum.Material.Carpet
+    end
+
+    local glove = tool:FindFirstChild("Glove")
+    if glove then
+        if glove:IsA("MeshPart") then glove.TextureID = "" end
+        glove.Color = Color3.fromRGB(0, 255, 0)
+        glove.Material = Enum.Material.Carpet
+        for _, v in ipairs(glove:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.Color = Color3.fromRGB(0, 255, 0)
+                v.Material = Enum.Material.Carpet
+            elseif v:IsA("Texture") or v:IsA("Decal") or v:IsA("SurfaceAppearance") then
+                v:Destroy()
+            end
+        end
+    end
+end
+
+-- // 6. WATCHER & INITIALIZATION
+sendNotification()
+
+task.spawn(function()
+    while true do
+        local char = player.Character
+        local tool = (char and char:FindFirstChild("Brick")) or backpack:FindFirstChild("Brick")
+        if tool then 
+            applyStyle(tool) 
+        end
+        task.wait(0.1)
+    end
+end)
