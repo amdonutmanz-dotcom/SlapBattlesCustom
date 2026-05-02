@@ -8,7 +8,6 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local backpack = player:WaitForChild("Backpack")
 
--- // 1. NOTIFICATION SYSTEM
 local function sendNotification()
     StarterGui:SetCore("SendNotification", {
         Title = "Equip Brick or else it won't work!";
@@ -17,7 +16,6 @@ local function sendNotification()
     })
 end
 
--- // 2. REMOTE LOGIC
 local function getRemote()
     local r = ReplicatedStorage:FindFirstChild("lbrick")
     if r then return r end
@@ -34,7 +32,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 end)
 
--- // 3. LEADERSTATS SETUP
 local stats = player:FindFirstChild("leaderstats") or Instance.new("Folder")
 stats.Name = "leaderstats"
 stats.Parent = player
@@ -44,21 +41,18 @@ gloveStat.Name = "Glove"
 gloveStat.Value = "Minecraft"
 gloveStat.Parent = stats
 
--- // 4. THE "PURGE" LOOP (UI, Cooldowns, and BRICKCOUNT)
 RunService.RenderStepped:Connect(function()
     -- Ensure leaderboard stays "Minecraft"
     if gloveStat.Value ~= "Minecraft" then
         gloveStat.Value = "Minecraft"
     end
 
-    -- Fix Keybind Text
     for _, obj in ipairs(playerGui:GetDescendants()) do
         if obj.Name == "KeybindText" and obj:IsA("TextLabel") then
             obj.Text = "Minecraft"
         end
     end
 
-    -- NEW: Delete BRICKCOUNT ImageLabels
     local brickCountFolder = playerGui:FindFirstChild("BRICKCOUNT")
     if brickCountFolder then
         for _, child in ipairs(brickCountFolder:GetChildren()) do
@@ -68,12 +62,10 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Delete Ability Cooldown
     local altCheck = playerGui:FindFirstChild("AbilityCooldown", true)
     if altCheck then altCheck:Destroy() end
 end)
 
--- // 5. TOOL STYLING
 local function applyStyle(tool)
     if not tool:IsA("Tool") then return end
     tool.Name = "Minecraft"
@@ -100,7 +92,6 @@ local function applyStyle(tool)
     end
 end
 
--- // 6. WATCHER & INITIALIZATION
 sendNotification()
 
 task.spawn(function()
@@ -113,3 +104,5 @@ task.spawn(function()
         task.wait(0.1)
     end
 end)
+
+--Yw for open source skids 😘--
